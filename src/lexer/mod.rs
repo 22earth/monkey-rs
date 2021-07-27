@@ -35,6 +35,8 @@ impl<'a> Lexer<'a> {
                 self.ch = ch;
             }
         }
+        self.position = self.read_position;
+        self.read_position += 1;
     }
     pub fn peek_char(&self) -> char {
         if self.read_position >= self.input.len() {

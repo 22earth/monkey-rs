@@ -149,8 +149,10 @@ pub fn lookup_identifier(identifier: &str) -> TokenKind {
     match identifier {
         "fn" => Keyword::Function.into(),
         "let" => Keyword::Let.into(),
-        "true" => Keyword::True.into(),
-        "false" => Keyword::False.into(),
+        // use BooleanLiteral not TokenKind::keyword(Keyword::True)
+        "true" => true.into(),
+        // "true" => TokenKind::boolean_literal(true),
+        "false" => TokenKind::boolean_literal(false),
         "if" => Keyword::If.into(),
         "else" => Keyword::Else.into(),
         "return" => Keyword::Return.into(),
