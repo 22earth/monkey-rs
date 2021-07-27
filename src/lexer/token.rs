@@ -6,6 +6,15 @@ pub struct Token {
     pub span: Span,
 }
 
+impl fmt::Display for Token {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "start: {}, end: {}, kind: {}",
+            self.span.start, self.span.end, self.kind
+        )
+    }
+}
 impl Token {
     /// Create a new detailed token from the token data, line number and column number
     #[inline]
