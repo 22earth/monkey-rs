@@ -70,6 +70,7 @@ impl fmt::Display for Statement {
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Expression {
     Integer(i64),
+    Identifier(String),
 }
 
 impl fmt::Display for Expression {
@@ -79,6 +80,7 @@ impl fmt::Display for Expression {
             "{}",
             match self {
                 Expression::Integer(value) => format!("{}", value),
+                Expression::Identifier(value) => format!("{}", value),
             }
         )
     }

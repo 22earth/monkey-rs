@@ -53,3 +53,31 @@ return 993322;
         }
     }
 }
+
+#[test]
+fn test_let_val() {
+    let input = "let foo = bar;";
+    let prog = setup(input, 1);
+
+    match prog.body[0] {
+        node::Statement::Let(ref l) => {
+            assert_eq!(l.name, "foo".to_string());
+            // assert_eq!(l.value, Expression::Integer(2))
+            assert_eq!(l.value, Expression::Identifier("bar".to_string()))
+        }
+        _ => panic!("invalid node"),
+    };
+}
+
+#[test]
+fn test_ident() {
+    let input = "bar;";
+    let prog = setup(input, 1);
+
+    match prog.body[0] {
+        node::Statement::Expression(ref s) => {
+            assert_eq!(s.expression, Expression::Identifier("bar".to_string()));
+        }
+        _ => panic!("invalid node"),
+    };
+}
