@@ -1,6 +1,7 @@
 use super::{keyword::Keyword, punctuator::Punctuator};
 use std::fmt;
 
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct Token {
     pub kind: TokenKind,
     pub span: Span,
@@ -35,13 +36,13 @@ impl Token {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 pub struct Span {
     pub start: usize,
     pub end: usize,
 }
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Numeric {
     // An integer
     Integer(i64),
@@ -54,7 +55,7 @@ impl From<i64> for Numeric {
     }
 }
 
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum TokenKind {
     BooleanLiteral(bool),
     EOF,

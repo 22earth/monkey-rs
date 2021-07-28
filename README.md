@@ -15,3 +15,4 @@ $ cargo test
 - https://github.com/boa-dev/boa
 - https://github.com/gengjiawen/monkey-rust
 - https://github.com/Rydgel/monkey-rust
+- https://github.com/pauldix/monkey-rust

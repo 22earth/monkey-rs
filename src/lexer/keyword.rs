@@ -1,6 +1,6 @@
 use std::{fmt, str::FromStr};
 
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Keyword {
     Function,
     Let,
@@ -11,7 +11,7 @@ pub enum Keyword {
     Return,
 }
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub struct KeywordError;
 impl fmt::Display for KeywordError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -20,7 +20,7 @@ impl fmt::Display for KeywordError {
 }
 
 impl Keyword {
-    pub fn as_str(self) -> &'static str {
+    pub fn as_str(&self) -> &'static str {
         match self {
             Self::Function => "fn",
             Self::Let => "let",
