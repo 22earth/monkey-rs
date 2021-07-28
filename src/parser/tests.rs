@@ -33,3 +33,23 @@ let foobar = 838383;";
         }
     }
 }
+
+#[test]
+fn test_return_statement() {
+    let input = r"
+return 5;
+return 10;
+return 993322;
+";
+    let prog = setup(input, 3);
+    let vals: [i64; 3] = [5, 10, 993322];
+    let mut it = prog.body.iter();
+    for t in vals {
+        match it.next().unwrap() {
+            node::Statement::Return(ref l) => {
+                assert_eq!(l.value, t.into());
+            }
+            _ => panic!("invalid node"),
+        }
+    }
+}

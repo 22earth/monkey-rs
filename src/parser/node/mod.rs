@@ -83,3 +83,10 @@ impl fmt::Display for Expression {
         )
     }
 }
+
+impl From<i64> for Expression {
+    #[inline]
+    fn from(n: i64) -> Self {
+        Self::Integer(n)
+    }
+}

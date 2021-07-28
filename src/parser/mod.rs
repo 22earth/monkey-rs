@@ -67,7 +67,7 @@ impl<'a> Parser<'a> {
     fn parse_statement(&mut self) -> ParseResult<Statement> {
         match self.cur_token.kind {
             TokenKind::Keyword(Keyword::Let) => self.parse_let_statement(),
-            // TokenKind::Keyword(Keyword::Return) => self.parse_return_statement(),
+            TokenKind::Keyword(Keyword::Return) => self.parse_return_statement(),
             _ => Err(format!("invalid statement token {}", self.cur_token)),
         }
     }
@@ -112,5 +112,19 @@ impl<'a> Parser<'a> {
             let e = format!("expected token: {} got: {}", kind, self.cur_token);
             Err(e)
         }
+    }
+    fn parse_return_statement(&mut self) -> ParseResult<Statement> {
+        self.next_token();
+        // TODO
+        let value = match self.cur_token.kind() {
+            TokenKind::NumericLiteral(Numeric::Integer(num)) => num.clone(),
+            _ => return Err(format!("invalid number token {}", self.cur_token)),
+        };
+        if self.peek_token_is(&TokenKind::punctuator(Punctuator::Semicolon)) {
+            self.next_token();
+        }
+        Ok(Statement::Return(Box::new(node::ReturnStatement {
+            value: node::Expression::Integer(value),
+        })))
     }
 }
