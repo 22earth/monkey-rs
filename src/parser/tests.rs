@@ -93,3 +93,68 @@ fn test_prefix_expression() {
         }
     }
 }
+
+#[test]
+fn test_infix_expression() {
+    let input = r#"5 + 5;
+5 - 5;
+5 * 5;
+5 / 5;
+5 > 5;
+5 < 5;
+5 == 5;
+5 != 5;
+"#;
+    let prog = setup(input, 8);
+    let tests = [
+        Expression::Infix(Box::new(node::InfixExpression {
+            left: Expression::Integer(5),
+            right: Expression::Integer(5),
+            operator: TokenKind::punctuator(Punctuator::Add),
+        })),
+        Expression::Infix(Box::new(node::InfixExpression {
+            left: Expression::Integer(5),
+            right: Expression::Integer(5),
+            operator: TokenKind::punctuator(Punctuator::Sub),
+        })),
+        Expression::Infix(Box::new(node::InfixExpression {
+            left: Expression::Integer(5),
+            right: Expression::Integer(5),
+            operator: TokenKind::punctuator(Punctuator::Mul),
+        })),
+        Expression::Infix(Box::new(node::InfixExpression {
+            left: Expression::Integer(5),
+            right: Expression::Integer(5),
+            operator: TokenKind::punctuator(Punctuator::Div),
+        })),
+        Expression::Infix(Box::new(node::InfixExpression {
+            left: Expression::Integer(5),
+            right: Expression::Integer(5),
+            operator: TokenKind::punctuator(Punctuator::GreaterThan),
+        })),
+        Expression::Infix(Box::new(node::InfixExpression {
+            left: Expression::Integer(5),
+            right: Expression::Integer(5),
+            operator: TokenKind::punctuator(Punctuator::LessThan),
+        })),
+        Expression::Infix(Box::new(node::InfixExpression {
+            left: Expression::Integer(5),
+            right: Expression::Integer(5),
+            operator: TokenKind::punctuator(Punctuator::Eq),
+        })),
+        Expression::Infix(Box::new(node::InfixExpression {
+            left: Expression::Integer(5),
+            right: Expression::Integer(5),
+            operator: TokenKind::punctuator(Punctuator::NotEq),
+        })),
+    ];
+    let mut it = prog.body.iter();
+    for t in tests {
+        match it.next().unwrap() {
+            node::Statement::Expression(ref l) => {
+                assert_eq!(l.expression, t);
+            }
+            _ => panic!("invalid node"),
+        }
+    }
+}

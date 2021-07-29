@@ -65,7 +65,17 @@ impl<'a> Parser<'a> {
     }
     fn infix_fn(&mut self) -> Option<InfixFn> {
         match self.peek_token.kind() {
-            // TokenKind::Punctuator(Punctuator::Add) => Some(Parser::parse_infix_expression),
+            TokenKind::Punctuator(punc) => match punc {
+                Punctuator::Add
+                | Punctuator::Sub
+                | Punctuator::Mul
+                | Punctuator::Div
+                | Punctuator::GreaterThan
+                | Punctuator::Eq
+                | Punctuator::NotEq
+                | Punctuator::LessThan => Some(Parser::parse_infix_expression),
+                _ => None,
+            },
             _ => None,
         }
     }
@@ -97,6 +107,9 @@ impl<'a> Parser<'a> {
     }
     fn peek_precedence(&self) -> Precedence {
         Precedence::token_precedence(&self.peek_token.kind())
+    }
+    fn cur_precedence(&self) -> Precedence {
+        Precedence::token_precedence(&self.cur_token.kind())
     }
     fn parse_expression(&mut self, precedence: Precedence) -> ParseResult<Expression> {
         let mut left_exp: Expression;
@@ -239,6 +252,23 @@ impl<'a> Parser<'a> {
 
         Ok(Expression::Prefix(Box::new(node::PrefixExpression {
             operator,
+            right,
+        })))
+    }
+    fn parse_infix_expression(
+        parser: &mut Parser<'_>,
+        left: Expression,
+    ) -> ParseResult<Expression> {
+        let operator = parser.cur_token.kind().clone();
+        let precedence = parser.cur_precedence();
+
+        parser.next_token();
+
+        let right = parser.parse_expression(precedence)?;
+
+        Ok(Expression::Infix(Box::new(node::InfixExpression {
+            operator,
+            left,
             right,
         })))
     }
