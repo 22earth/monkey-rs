@@ -322,7 +322,52 @@ impl<'a> Parser<'a> {
         Ok(node::BlockStatement { statements })
     }
     fn parse_function_literal(parser: &mut Parser<'_>) -> ParseResult<Expression> {
-        // TODO
-        unimplemented!()
+        parser.expect_peek(&TokenKind::Punctuator(Punctuator::OpenParen))?;
+        let parameters = parser.parse_function_parameters()?;
+
+        parser.expect_peek(&TokenKind::Punctuator(Punctuator::OpenBlock))?;
+
+        let body = parser.parse_block_statement()?;
+
+        Ok(Expression::Function(Box::new(node::FunctionLiteral {
+            parameters,
+            body,
+        })))
+    }
+    fn parse_function_parameters(&mut self) -> Result<Vec<node::IdentifierExpression>, ParseError> {
+        let mut identifiers: Vec<node::IdentifierExpression> = Vec::new();
+
+        if self.peek_token_is(&TokenKind::Punctuator(Punctuator::CloseParen)) {
+            self.next_token();
+            return Ok(identifiers);
+        }
+
+        self.next_token();
+
+        identifiers.push(self.parse_identifier_into_identifier_expression()?);
+
+        while self.peek_token_is(&TokenKind::Punctuator(Punctuator::Comma)) {
+            self.next_token();
+            self.next_token();
+            identifiers.push(self.parse_identifier_into_identifier_expression()?);
+        }
+
+        self.expect_peek(&TokenKind::Punctuator(Punctuator::CloseParen))?;
+
+        Ok(identifiers)
+    }
+    fn parse_identifier_into_identifier_expression(
+        &mut self,
+    ) -> ParseResult<node::IdentifierExpression> {
+        if let TokenKind::Identifier(ref name) = self.cur_token.kind() {
+            return Ok(node::IdentifierExpression {
+                name: name.to_string(),
+            });
+        }
+
+        Err(format!(
+            "unexpected error on identifier parse with {}",
+            self.cur_token
+        ))
     }
 }

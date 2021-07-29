@@ -209,3 +209,14 @@ fn test_if_expression() {
         assert_eq!(prog.to_string(), t.1);
     }
 }
+
+#[test]
+fn test_fn_literal() {
+    let tests = vec![("fn(x, y) { x + y; }", "(x, y) (x + y)")];
+    for t in tests {
+        let l = Lexer::new(t.0);
+        let mut p = Parser::new(l);
+        let prog = p.parse_program().unwrap();
+        assert_eq!(prog.to_string(), t.1);
+    }
+}
