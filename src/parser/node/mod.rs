@@ -97,6 +97,13 @@ impl fmt::Display for Expression {
     }
 }
 
+impl From<bool> for Expression {
+    #[inline]
+    fn from(n: bool) -> Self {
+        Self::Boolean(n)
+    }
+}
+
 impl From<i64> for Expression {
     #[inline]
     fn from(n: i64) -> Self {

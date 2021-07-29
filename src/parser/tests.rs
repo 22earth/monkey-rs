@@ -17,18 +17,24 @@ fn setup(input: &str, stmt_count: usize) -> Program {
 
 #[test]
 fn test_return_statement() {
-    let input = r"
+    let input = r#"
+return bar;
 return 5;
-return 10;
-return 993322;
-";
-    let prog = setup(input, 3);
-    let vals: [i64; 3] = [5, 10, 993322];
+return true;
+return "foo";
+"#;
+    let prog = setup(input, 4);
+    let tests = [
+        Expression::Identifier("bar".to_string()),
+        Expression::Integer(5),
+        Expression::Boolean(true),
+        Expression::String("foo".to_string()),
+    ];
     let mut it = prog.body.iter();
-    for t in vals {
+    for t in tests {
         match it.next().unwrap() {
             node::Statement::Return(ref l) => {
-                assert_eq!(l.value, t.into());
+                assert_eq!(l.value, t);
             }
             _ => panic!("invalid node"),
         }

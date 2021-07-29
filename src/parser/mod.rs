@@ -186,17 +186,11 @@ impl<'a> Parser<'a> {
     }
     fn parse_return_statement(&mut self) -> ParseResult<Statement> {
         self.next_token();
-        // TODO
-        let value = match self.cur_token.kind() {
-            TokenKind::NumericLiteral(Numeric::Integer(num)) => num.clone(),
-            _ => return Err(format!("invalid number token {}", self.cur_token)),
-        };
+        let value = self.parse_expression(Precedence::Lowest)?;
         if self.peek_token_is(&TokenKind::punctuator(Punctuator::Semicolon)) {
             self.next_token();
         }
-        Ok(Statement::Return(Box::new(node::ReturnStatement {
-            value: node::Expression::Integer(value),
-        })))
+        Ok(Statement::Return(Box::new(node::ReturnStatement { value })))
     }
     fn parse_expression_statement(&mut self) -> ParseResult<Statement> {
         let expression = self.parse_expression(Precedence::Lowest)?;
