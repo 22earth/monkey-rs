@@ -74,6 +74,7 @@ impl<'a> Parser<'a> {
                 | Punctuator::Eq
                 | Punctuator::NotEq
                 | Punctuator::LessThan => Some(Parser::parse_infix_expression),
+                Punctuator::OpenParen => Some(Parser::parse_call_expression),
                 _ => None,
             },
             _ => None,
@@ -369,5 +370,37 @@ impl<'a> Parser<'a> {
             "unexpected error on identifier parse with {}",
             self.cur_token
         ))
+    }
+    fn parse_call_expression(
+        parser: &mut Parser<'_>,
+        function: Expression,
+    ) -> ParseResult<Expression> {
+        let arguments =
+            parser.parse_expression_list(TokenKind::Punctuator(Punctuator::CloseParen))?;
+        Ok(Expression::Call(Box::new(node::CallExpression {
+            function,
+            arguments,
+        })))
+    }
+    fn parse_expression_list(&mut self, end: TokenKind) -> ParseResult<Vec<Expression>> {
+        let mut list: Vec<Expression> = Vec::new();
+
+        if self.peek_token_is(&end) {
+            self.next_token();
+            return Ok(list);
+        }
+
+        self.next_token();
+        list.push(self.parse_expression(Precedence::Lowest)?);
+
+        while self.peek_token_is(&TokenKind::Punctuator(Punctuator::Comma)) {
+            self.next_token();
+            self.next_token();
+            list.push(self.parse_expression(Precedence::Lowest)?);
+        }
+
+        self.expect_peek(&end)?;
+
+        Ok(list)
     }
 }
