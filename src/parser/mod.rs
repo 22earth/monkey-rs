@@ -74,9 +74,9 @@ impl<'a> Parser<'a> {
             TokenKind::Identifier(_) => Some(Parser::parse_identifier),
             TokenKind::NumericLiteral(_) => Some(Parser::parse_integer_literal),
             TokenKind::StringLiteral(_) => Some(Parser::parse_string_literal),
-            // TokenKind::Punctuator(Punctuator::Not) | TokenKind::Punctuator(Punctuator::Sub) => {
-            //     Some(Parser::parse_prefix_expression)
-            // }
+            TokenKind::Punctuator(Punctuator::Not) | TokenKind::Punctuator(Punctuator::Sub) => {
+                Some(Parser::parse_prefix_expression)
+            }
             TokenKind::BooleanLiteral(_) => Some(Parser::parse_boolean),
             // TokenKind::Punctuator(Punctuator::OpenParen) => Some(Parser::parse_grouped_expression),
             // TokenKind::Keyword(Keyword::If) => Some(Parser::parse_if_expression),
@@ -235,5 +235,17 @@ impl<'a> Parser<'a> {
             // we should never hit this since this function is only handed out for tokens matched as boolean
             _ => panic!("couldn't parse {:?} to boolean", parser.cur_token),
         }
+    }
+    fn parse_prefix_expression(parser: &mut Parser<'_>) -> ParseResult<Expression> {
+        let operator = parser.cur_token.kind().clone();
+
+        parser.next_token();
+
+        let right = parser.parse_expression(Precedence::Prefix)?;
+
+        Ok(Expression::Prefix(Box::new(node::PrefixExpression {
+            operator,
+            right,
+        })))
     }
 }

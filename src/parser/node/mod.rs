@@ -1,11 +1,14 @@
 use std::fmt;
 
 pub use self::{
-    expression_stmt::ExpressionStatement, let_stmt::LetStatement, return_stmt::ReturnStatement,
+    expression_stmt::ExpressionStatement, infix_expression::InfixExpression,
+    let_stmt::LetStatement, prefix_expression::PrefixExpression, return_stmt::ReturnStatement,
 };
 
 mod expression_stmt;
+mod infix_expression;
 mod let_stmt;
+mod prefix_expression;
 mod return_stmt;
 
 #[derive(Debug)]
@@ -71,6 +74,10 @@ impl fmt::Display for Statement {
 pub enum Expression {
     Integer(i64),
     Identifier(String),
+    String(String),
+    Boolean(bool),
+    Prefix(Box<PrefixExpression>),
+    Infix(Box<InfixExpression>),
 }
 
 impl fmt::Display for Expression {
@@ -81,6 +88,10 @@ impl fmt::Display for Expression {
             match self {
                 Expression::Integer(value) => format!("{}", value),
                 Expression::Identifier(value) => format!("{}", value),
+                Expression::String(value) => format!("{}", value),
+                Expression::Boolean(value) => format!("{}", value),
+                Expression::Prefix(value) => format!("{}", value),
+                Expression::Infix(value) => format!("{}", value),
             }
         )
     }

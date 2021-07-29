@@ -3,6 +3,7 @@ use token::{Span, Token, TokenKind};
 use self::{punctuator::Punctuator, token::Numeric};
 
 pub mod keyword;
+pub mod op;
 pub mod punctuator;
 pub mod token;
 

@@ -60,3 +60,30 @@ let foo = "foo";
         }
     }
 }
+
+#[test]
+fn test_prefix_expression() {
+    let input = r#"!5;
+-15;
+"#;
+    let prog = setup(input, 2);
+    let tests = [
+        Expression::Prefix(Box::new(node::PrefixExpression {
+            operator: TokenKind::punctuator(Punctuator::Not),
+            right: Expression::Integer(5),
+        })),
+        Expression::Prefix(Box::new(node::PrefixExpression {
+            operator: TokenKind::punctuator(Punctuator::Sub),
+            right: Expression::Integer(15),
+        })),
+    ];
+    let mut it = prog.body.iter();
+    for t in tests {
+        match it.next().unwrap() {
+            node::Statement::Expression(ref l) => {
+                assert_eq!(l.expression, t);
+            }
+            _ => panic!("invalid node"),
+        }
+    }
+}
