@@ -88,7 +88,7 @@ impl<'a> Parser<'a> {
                 Some(Parser::parse_prefix_expression)
             }
             TokenKind::BooleanLiteral(_) => Some(Parser::parse_boolean),
-            // TokenKind::Punctuator(Punctuator::OpenParen) => Some(Parser::parse_grouped_expression),
+            TokenKind::Punctuator(Punctuator::OpenParen) => Some(Parser::parse_grouped_expression),
             // TokenKind::Keyword(Keyword::If) => Some(Parser::parse_if_expression),
             // TokenKind::Keyword(Keyword::Function) => Some(Parser::parse_function_literal),
             // TODO array hash
@@ -271,5 +271,12 @@ impl<'a> Parser<'a> {
             left,
             right,
         })))
+    }
+    fn parse_grouped_expression(parser: &mut Parser<'_>) -> ParseResult<Expression> {
+        parser.next_token();
+        let exp = parser.parse_expression(Precedence::Lowest);
+        parser.expect_peek(&TokenKind::Punctuator(Punctuator::CloseParen))?;
+
+        exp
     }
 }
