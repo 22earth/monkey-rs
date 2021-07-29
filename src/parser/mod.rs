@@ -89,8 +89,8 @@ impl<'a> Parser<'a> {
             }
             TokenKind::BooleanLiteral(_) => Some(Parser::parse_boolean),
             TokenKind::Punctuator(Punctuator::OpenParen) => Some(Parser::parse_grouped_expression),
-            // TokenKind::Keyword(Keyword::If) => Some(Parser::parse_if_expression),
-            // TokenKind::Keyword(Keyword::Function) => Some(Parser::parse_function_literal),
+            TokenKind::Keyword(Keyword::If) => Some(Parser::parse_if_expression),
+            TokenKind::Keyword(Keyword::Function) => Some(Parser::parse_function_literal),
             // TODO array hash
             _ => None,
         }
@@ -239,7 +239,6 @@ impl<'a> Parser<'a> {
     fn parse_boolean(parser: &mut Parser<'_>) -> ParseResult<Expression> {
         match parser.cur_token.kind() {
             TokenKind::BooleanLiteral(v) => Ok(Expression::Boolean(*v)),
-            // we should never hit this since this function is only handed out for tokens matched as boolean
             _ => panic!("couldn't parse {:?} to boolean", parser.cur_token),
         }
     }
@@ -278,5 +277,52 @@ impl<'a> Parser<'a> {
         parser.expect_peek(&TokenKind::Punctuator(Punctuator::CloseParen))?;
 
         exp
+    }
+    fn parse_if_expression(parser: &mut Parser<'_>) -> ParseResult<Expression> {
+        // TODO
+        parser.expect_peek(&TokenKind::Punctuator(Punctuator::OpenParen))?;
+        parser.next_token();
+        let condition = parser.parse_expression(Precedence::Lowest)?;
+
+        parser.expect_peek(&TokenKind::Punctuator(Punctuator::CloseParen))?;
+        parser.expect_peek(&TokenKind::Punctuator(Punctuator::OpenBlock))?;
+        let consequence = parser.parse_block_statement()?;
+
+        let alternative = if parser.peek_token_is(&TokenKind::Keyword(Keyword::Else)) {
+            parser.next_token();
+
+            parser.expect_peek(&TokenKind::Punctuator(Punctuator::OpenBlock))?;
+
+            let alt_block = parser.parse_block_statement()?;
+            Some(alt_block)
+        } else {
+            None
+        };
+
+        Ok(Expression::If(Box::new(node::IfExpression {
+            condition,
+            consequence,
+            alternative,
+        })))
+    }
+    fn parse_block_statement(&mut self) -> ParseResult<node::BlockStatement> {
+        let mut statements = Vec::new();
+
+        self.next_token();
+
+        while !self.cur_token_is(&TokenKind::Punctuator(Punctuator::CloseBlock))
+            && !self.cur_token_is(&TokenKind::EOF)
+        {
+            if let Ok(stmt) = self.parse_statement() {
+                statements.push(stmt);
+            }
+            self.next_token();
+        }
+
+        Ok(node::BlockStatement { statements })
+    }
+    fn parse_function_literal(parser: &mut Parser<'_>) -> ParseResult<Expression> {
+        // TODO
+        unimplemented!()
     }
 }

@@ -195,3 +195,17 @@ fn test_operator_precedence() {
         assert_eq!(prog.to_string(), t.1);
     }
 }
+
+#[test]
+fn test_if_expression() {
+    let tests = vec![
+        ("if (x < y) { x }", "if (x < y) x"),
+        ("if (x < y) { x } else { y }", "if (x < y) x else y"),
+    ];
+    for t in tests {
+        let l = Lexer::new(t.0);
+        let mut p = Parser::new(l);
+        let prog = p.parse_program().unwrap();
+        assert_eq!(prog.to_string(), t.1);
+    }
+}

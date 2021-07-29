@@ -1,11 +1,14 @@
 use std::fmt;
 
 pub use self::{
-    expression_stmt::ExpressionStatement, infix_expression::InfixExpression,
-    let_stmt::LetStatement, prefix_expression::PrefixExpression, return_stmt::ReturnStatement,
+    block_stmt::BlockStatement, expression_stmt::ExpressionStatement, if_expression::IfExpression,
+    infix_expression::InfixExpression, let_stmt::LetStatement, prefix_expression::PrefixExpression,
+    return_stmt::ReturnStatement,
 };
 
+mod block_stmt;
 mod expression_stmt;
+mod if_expression;
 mod infix_expression;
 mod let_stmt;
 mod prefix_expression;
@@ -78,6 +81,7 @@ pub enum Expression {
     Boolean(bool),
     Prefix(Box<PrefixExpression>),
     Infix(Box<InfixExpression>),
+    If(Box<IfExpression>),
 }
 
 impl fmt::Display for Expression {
@@ -92,6 +96,7 @@ impl fmt::Display for Expression {
                 Expression::Boolean(value) => format!("{}", value),
                 Expression::Prefix(value) => format!("{}", value),
                 Expression::Infix(value) => format!("{}", value),
+                Expression::If(value) => format!("{}", value),
             }
         )
     }
