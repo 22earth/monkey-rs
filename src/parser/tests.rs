@@ -16,25 +16,6 @@ fn setup(input: &str, stmt_count: usize) -> Program {
 }
 
 #[test]
-fn test_let_statement() {
-    let input = r"
-let x = 5;
-let y = 10;
-let foobar = 838383;";
-    let prog = setup(input, 3);
-    let tests = ["x", "y", "foobar"];
-    let mut it = prog.body.iter();
-    for t in tests {
-        match it.next().unwrap() {
-            node::Statement::Let(ref l) => {
-                assert_eq!(l.name, t);
-            }
-            _ => panic!("invalid node"),
-        }
-    }
-}
-
-#[test]
 fn test_return_statement() {
     let input = r"
 return 5;
@@ -55,29 +36,27 @@ return 993322;
 }
 
 #[test]
-fn test_let_val() {
-    let input = "let foo = bar;";
-    let prog = setup(input, 1);
-
-    match prog.body[0] {
-        node::Statement::Let(ref l) => {
-            assert_eq!(l.name, "foo".to_string());
-            // assert_eq!(l.value, Expression::Integer(2))
-            assert_eq!(l.value, Expression::Identifier("bar".to_string()))
+fn test_let_statement() {
+    let input = r#"let foo = bar;
+let foo = 5;
+let foo = true;
+let foo = "foo";
+"#;
+    let prog = setup(input, 4);
+    let tests = [
+        Expression::Identifier("bar".to_string()),
+        Expression::Integer(5),
+        Expression::Boolean(true),
+        Expression::String("foo".to_string()),
+    ];
+    let mut it = prog.body.iter();
+    for t in tests {
+        match it.next().unwrap() {
+            node::Statement::Let(ref l) => {
+                assert_eq!(l.name, "foo".to_string());
+                assert_eq!(l.value, t);
+            }
+            _ => panic!("invalid node"),
         }
-        _ => panic!("invalid node"),
-    };
-}
-
-#[test]
-fn test_ident() {
-    let input = "bar;";
-    let prog = setup(input, 1);
-
-    match prog.body[0] {
-        node::Statement::Expression(ref s) => {
-            assert_eq!(s.expression, Expression::Identifier("bar".to_string()));
-        }
-        _ => panic!("invalid node"),
-    };
+    }
 }

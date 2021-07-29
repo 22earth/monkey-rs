@@ -72,6 +72,16 @@ impl<'a> Parser<'a> {
     fn prefix_fn(&mut self) -> Option<PrefixFn> {
         match self.cur_token.kind() {
             TokenKind::Identifier(_) => Some(Parser::parse_identifier),
+            TokenKind::NumericLiteral(_) => Some(Parser::parse_integer_literal),
+            TokenKind::StringLiteral(_) => Some(Parser::parse_string_literal),
+            // TokenKind::Punctuator(Punctuator::Not) | TokenKind::Punctuator(Punctuator::Sub) => {
+            //     Some(Parser::parse_prefix_expression)
+            // }
+            TokenKind::BooleanLiteral(_) => Some(Parser::parse_boolean),
+            // TokenKind::Punctuator(Punctuator::OpenParen) => Some(Parser::parse_grouped_expression),
+            // TokenKind::Keyword(Keyword::If) => Some(Parser::parse_if_expression),
+            // TokenKind::Keyword(Keyword::Function) => Some(Parser::parse_function_literal),
+            // TODO array hash
             _ => None,
         }
     }
@@ -198,5 +208,32 @@ impl<'a> Parser<'a> {
         Ok(Statement::Expression(Box::new(node::ExpressionStatement {
             expression,
         })))
+    }
+    fn parse_integer_literal(parser: &mut Parser<'_>) -> ParseResult<Expression> {
+        if let TokenKind::NumericLiteral(Numeric::Integer(value)) = parser.cur_token.kind() {
+            return Ok(Expression::Integer(*value));
+        }
+
+        Err(format!(
+            "error parsing integer literal {}",
+            parser.cur_token
+        ))
+    }
+    fn parse_string_literal(parser: &mut Parser<'_>) -> ParseResult<Expression> {
+        if let TokenKind::StringLiteral(ref s) = parser.cur_token.kind() {
+            return Ok(Expression::String(s.to_string()));
+        }
+
+        Err(format!(
+            "unexpected error on string parse with {}",
+            parser.cur_token
+        ))
+    }
+    fn parse_boolean(parser: &mut Parser<'_>) -> ParseResult<Expression> {
+        match parser.cur_token.kind() {
+            TokenKind::BooleanLiteral(v) => Ok(Expression::Boolean(*v)),
+            // we should never hit this since this function is only handed out for tokens matched as boolean
+            _ => panic!("couldn't parse {:?} to boolean", parser.cur_token),
+        }
     }
 }
