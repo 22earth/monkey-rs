@@ -48,9 +48,49 @@ fn eval_expression(exp: &Expression) -> EvalResult {
             let right = eval_expression(&exp.right)?;
             eval_prefix_expression(&exp.operator, right)
         }
+        Expression::Infix(exp) => {
+            let left = eval_expression(&exp.left)?;
+            let right = eval_expression(&exp.right)?;
+            eval_infix_expression(&exp.operator, left, right)
+        }
         _ => Err(EvalError {
             message: "unimplement eval expression".to_string(),
         }),
+    }
+}
+
+fn eval_infix_expression(
+    operator: &TokenKind,
+    left: Rc<Object>,
+    right: Rc<Object>,
+) -> Result<Rc<Object>, EvalError> {
+    match (&*left, &*right) {
+        (Object::Int(l), Object::Int(r)) => eval_integer_infix_expression(operator, *l, *r),
+        _ => Err(EvalError {
+            message: format!("type mismatch: {:?} {} {:?}", left, operator, right),
+        }),
+    }
+}
+
+fn eval_integer_infix_expression(
+    operator: &TokenKind,
+    l: i64,
+    r: i64,
+) -> Result<Rc<Object>, EvalError> {
+    match operator {
+        TokenKind::Punctuator(Punctuator::Add) => Ok(Rc::new(Object::Int(l + r))),
+        TokenKind::Punctuator(Punctuator::Sub) => Ok(Rc::new(Object::Int(l - r))),
+        TokenKind::Punctuator(Punctuator::Mul) => Ok(Rc::new(Object::Int(l * r))),
+        TokenKind::Punctuator(Punctuator::Div) => Ok(Rc::new(Object::Int(l / r))),
+        TokenKind::Punctuator(Punctuator::GreaterThan) => Ok(Rc::new(Object::Bool(l > r))),
+        TokenKind::Punctuator(Punctuator::LessThan) => Ok(Rc::new(Object::Bool(l < r))),
+        TokenKind::Punctuator(Punctuator::Eq) => Ok(Rc::new(Object::Bool(l == r))),
+        TokenKind::Punctuator(Punctuator::NotEq) => Ok(Rc::new(Object::Bool(l != r))),
+        _ => {
+            return Err(EvalError {
+                message: format!("unknown operator {}", operator),
+            })
+        }
     }
 }
 
