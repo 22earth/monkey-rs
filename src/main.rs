@@ -1,6 +1,9 @@
 use std::io::stdin;
 
-use monkey_rs::lexer::{token::TokenKind, Lexer};
+use monkey_rs::{
+    lexer::{token::TokenKind, Lexer},
+    parser::Parser,
+};
 
 fn main() {
     // TODO get user name
@@ -14,14 +17,9 @@ fn main() {
             std::process::exit(0)
         }
 
-        let mut l = Lexer::new(&input);
-        loop {
-            let t = l.next_token();
-            if t.kind == TokenKind::EOF {
-                break;
-            } else {
-                println!("{}", t)
-            }
-        }
+        let lexer = Lexer::new(&input);
+        let mut parser = Parser::new(lexer);
+        let program = parser.parse_program().unwrap();
+        println!("{}", program);
     }
 }

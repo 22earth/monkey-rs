@@ -139,7 +139,7 @@ impl<'a> Parser<'a> {
         self.cur_token = self.peek_token.clone();
         self.peek_token = self.l.next_token();
     }
-    fn parse_program(&mut self) -> Result<Program, ParseErrors> {
+    pub fn parse_program(&mut self) -> Result<Program, ParseErrors> {
         let mut program = Program::new();
         let mut errors = ParseErrors::new();
         while self.cur_token.kind != TokenKind::EOF {
