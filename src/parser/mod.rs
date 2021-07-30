@@ -5,10 +5,10 @@ use crate::lexer::{
     Lexer,
 };
 
-use self::node::{Expression, Program, Statement};
+use self::node::{Expression, Node, Program, Statement};
 
 mod ast;
-mod node;
+pub mod node;
 
 #[cfg(test)]
 mod tests;
@@ -51,6 +51,14 @@ pub struct Parser<'a> {
     cur_token: Token,
     peek_token: Token,
     // errors: ParseErrors,
+}
+
+pub fn parse(input: &str) -> Result<Node, ParseErrors> {
+    let l = Lexer::new(input);
+    let mut p = Parser::new(l);
+    let prog = p.parse_program()?;
+
+    Ok(Node::Program(Box::new(prog)))
 }
 
 impl<'a> Parser<'a> {
