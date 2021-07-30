@@ -3,8 +3,8 @@ use std::rc::Rc;
 
 use crate::{
     lexer::{punctuator::Punctuator, token::TokenKind},
-    object::Object,
-    parser::node::{Expression, Node, Program, Statement},
+    object::{self, Object},
+    parser::node::{BlockStatement, Expression, Node, Program, Statement},
 };
 
 #[cfg(test)]
@@ -35,7 +35,11 @@ fn eval_program(p: &Program) -> EvalResult {
     let mut result = Rc::new(Object::Null);
     for stmt in &p.body {
         let res = eval_statement(stmt)?;
-        result = res;
+        // 处理 return
+        match &*res {
+            Object::Return(r) => return Ok(Rc::clone(&r.value)),
+            _ => result = res,
+        }
     }
     Ok(result)
 }
@@ -53,9 +57,40 @@ fn eval_expression(exp: &Expression) -> EvalResult {
             let right = eval_expression(&exp.right)?;
             eval_infix_expression(&exp.operator, left, right)
         }
+        Expression::If(if_exp) => {
+            let evaluated = eval_expression(&if_exp.condition)?;
+            match is_truthy(&evaluated) {
+                true => eval_block_statement(&if_exp.consequence),
+                false => match &if_exp.alternative {
+                    Some(alt) => eval_block_statement(alt),
+                    None => Ok(Rc::new(Object::Null)),
+                },
+            }
+        }
         _ => Err(EvalError {
             message: "unimplement eval expression".to_string(),
         }),
+    }
+}
+
+fn eval_block_statement(consequence: &BlockStatement) -> Result<Rc<Object>, EvalError> {
+    let mut result = Rc::new(Object::Null);
+
+    for stmt in &consequence.statements {
+        let res = eval_statement(stmt)?;
+        match *res {
+            Object::Return(_) => return Ok(res),
+            _ => result = res,
+        }
+    }
+
+    Ok(result)
+}
+fn is_truthy(obj: &Object) -> bool {
+    match obj {
+        Object::Null => false,
+        Object::Bool(false) => false,
+        _ => true,
     }
 }
 
@@ -152,7 +187,8 @@ fn eval_statement(stmt: &Statement) -> EvalResult {
             todo!()
         }
         Statement::Return(ret) => {
-            todo!()
+            let value = eval_expression(&ret.value)?;
+            Ok(Rc::new(Object::Return(Rc::new(object::Return { value }))))
         }
         Statement::Expression(exp) => eval_expression(&exp.expression),
     }

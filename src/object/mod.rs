@@ -1,3 +1,4 @@
+use std::hash::{Hash, Hasher};
 use std::{fmt, rc::Rc};
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -5,7 +6,7 @@ pub enum Object {
     Int(i64),
     Bool(bool),
     String(String),
-    // Return(Rc<Return>),
+    Return(Rc<Return>),
     // Function(Rc<Function>),
     // Builtin(Builtin),
     // Array(Rc<Array>),
@@ -15,13 +16,30 @@ pub enum Object {
     // Closure(Rc<Closure>),
 }
 
+#[derive(Clone, Debug)]
+pub struct Return {
+    pub value: Rc<Object>,
+}
+impl PartialEq for Return {
+    fn eq(&self, _other: &Return) -> bool {
+        unimplemented!("partial eq not implemented for Return")
+    }
+}
+
+impl Eq for Return {}
+impl Hash for Return {
+    fn hash<H: Hasher>(&self, _state: &mut H) {
+        // we should never hash an array so should be fine
+        panic!("hash for return not supported");
+    }
+}
 impl Object {
     pub fn inspect(&self) -> String {
         match self {
             Object::Int(i) => i.to_string(),
             Object::Bool(b) => b.to_string(),
             Object::String(s) => s.clone(),
-            // Object::Return(r) => r.value.inspect(),
+            Object::Return(r) => r.value.inspect(),
             // Object::Function(f) => f.inspect(),
             // Object::Builtin(b) => b.inspect(),
             // Object::Array(a) => a.inspect(),

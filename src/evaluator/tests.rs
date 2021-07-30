@@ -102,3 +102,61 @@ fn test_bang_operator() {
         test_bool_object(&evaluated, t.1);
     }
 }
+
+#[test]
+fn test_if_else_expression() {
+    // Use 0 represent null
+    let tests = [
+        ("if (true) { 10 }", 10),
+        ("if (false) { 10 }", 0),
+        ("if (1) { 10 }", 10),
+        ("if (1 < 2) { 10 }", 10),
+        ("if (1 > 2) { 10 }", 0),
+        ("if (1 > 2) { 10 } else { 20 }", 20),
+        ("if (1 < 2) { 10 } else { 20 }", 10),
+    ];
+    for t in tests {
+        let evaluated = test_eval(t.0);
+        match t.1 {
+            0 => test_null_object(&evaluated),
+            _ => test_integer_object(&evaluated, t.1),
+        }
+    }
+}
+
+#[test]
+fn test_return_statement() {
+    let tests = [
+        // return
+        ("return 10;", 10),
+        ("return 10; 9;", 10),
+        ("return 2 * 5; 9;", 10),
+        ("9; return 2 * 5; 9;", 10),
+        (
+            r#"if (10 > 1) {
+if (10 > 1) {
+return 10;
+}
+return 1;
+}"#,
+            10,
+        ),
+        (
+            r#"
+  if (10 > 1) {
+    if (1 > 10) {
+      return 10;
+    } else {
+      return 101;
+    }
+    return 1;
+  }
+"#,
+            101,
+        ),
+    ];
+    for t in tests {
+        let evaluated = test_eval(t.0);
+        test_integer_object(&evaluated, t.1)
+    }
+}
