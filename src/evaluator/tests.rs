@@ -58,7 +58,18 @@ fn eval_integer_expression() {
 
 #[test]
 fn eval_boolean_expression() {
-    let tests = vec![("true", true), ("false", false)];
+    let tests = vec![
+        ("true", true),
+        ("false", false),
+        ("1 < 2", true),
+        ("1 > 2", false),
+        ("1 < 1", false),
+        ("1 > 1", false),
+        ("1 == 1", true),
+        ("1 != 1", false),
+        ("1 == 2", false),
+        ("1 != 2", true),
+    ];
 
     for t in tests {
         let evaluated = test_eval(t.0);
