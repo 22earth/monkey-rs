@@ -32,7 +32,7 @@ fn test_null_object(obj: &Object) {
 }
 #[test]
 fn eval_integer_expression() {
-    let tests = vec![("5", 5), ("10", 10)];
+    let tests = vec![("5", 5), ("10", 10), ("-5", -5), ("-10", -10)];
 
     for t in tests {
         let evaluated = test_eval(t.0);
@@ -44,6 +44,23 @@ fn eval_integer_expression() {
 fn eval_boolean_expression() {
     let tests = vec![("true", true), ("false", false)];
 
+    for t in tests {
+        let evaluated = test_eval(t.0);
+        test_bool_object(&evaluated, t.1);
+    }
+}
+
+#[test]
+fn test_bang_operator() {
+    let tests = [
+        ("!true", false),
+        ("!false", true),
+        ("!5", false),
+        ("!!true", true),
+        ("!!false", false),
+        ("!!5", true),
+        ("!!0", false),
+    ];
     for t in tests {
         let evaluated = test_eval(t.0);
         test_bool_object(&evaluated, t.1);
