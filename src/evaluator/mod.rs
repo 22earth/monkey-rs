@@ -66,9 +66,26 @@ fn eval_infix_expression(
 ) -> Result<Rc<Object>, EvalError> {
     match (&*left, &*right) {
         (Object::Int(l), Object::Int(r)) => eval_integer_infix_expression(operator, *l, *r),
+        (Object::Bool(l), Object::Bool(r)) => eval_bool_infix_expression(operator, *l, *r),
         _ => Err(EvalError {
             message: format!("type mismatch: {:?} {} {:?}", left, operator, right),
         }),
+    }
+}
+
+fn eval_bool_infix_expression(
+    operator: &TokenKind,
+    l: bool,
+    r: bool,
+) -> Result<Rc<Object>, EvalError> {
+    match operator {
+        TokenKind::Punctuator(Punctuator::Eq) => Ok(Rc::new(Object::Bool(l == r))),
+        TokenKind::Punctuator(Punctuator::NotEq) => Ok(Rc::new(Object::Bool(l != r))),
+        _ => {
+            return Err(EvalError {
+                message: format!("unknown operator {}", operator),
+            })
+        }
     }
 }
 
