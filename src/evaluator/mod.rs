@@ -76,6 +76,11 @@ fn eval_expression(exp: &Expression, env: Rc<RefCell<Environment>>) -> EvalResul
             };
             Ok(Rc::new(Object::Function(Rc::new(func))))
         }
+        Expression::Call(exp) => {
+            let function = eval_expression(&exp.function, Rc::clone(&env))?;
+            let args = eval_expressions(&exp.arguments, env)?;
+            apply_function(&function, &args)
+        }
         _ => Err(EvalError {
             message: "unimplement eval expression".to_string(),
         }),
@@ -214,4 +219,58 @@ fn eval_statement(stmt: &Statement, env: Rc<RefCell<Environment>>) -> EvalResult
         }
         Statement::Expression(exp) => eval_expression(&exp.expression, env),
     }
+}
+
+fn eval_expressions(
+    exps: &Vec<Expression>,
+    env: Rc<RefCell<Environment>>,
+) -> Result<Vec<Rc<Object>>, EvalError> {
+    let mut objs = Vec::with_capacity(exps.len());
+
+    for e in exps {
+        let res = eval_expression(&e, Rc::clone(&env))?;
+        objs.push(res);
+    }
+
+    Ok(objs)
+}
+
+fn apply_function(func: &Object, args: &Vec<Rc<Object>>) -> EvalResult {
+    match func {
+        Object::Function(f) => {
+            let extended_env = extend_function_env(f, args);
+            let evaluated = eval_block_statement(&f.body, extended_env)?;
+            Ok(unwrap_return_value(evaluated))
+        }
+        // Object::Builtin(b) => match b.apply(args) {
+        //     Ok(obj) => Ok(obj),
+        //     Err(err) => Err(EvalError { message: err }),
+        // },
+        f => Err(EvalError {
+            message: format!("{:?} is not a function", f),
+        }),
+    }
+}
+
+fn extend_function_env(func: &Function, args: &Vec<Rc<Object>>) -> Rc<RefCell<Environment>> {
+    let env = Rc::new(RefCell::new(Environment::new_enclosed(Rc::clone(
+        &func.env,
+    ))));
+
+    let mut args_iter = args.into_iter();
+
+    for param in &func.parameters {
+        let arg = args_iter.next().unwrap();
+
+        env.borrow_mut().set(param.name.clone(), Rc::clone(arg))
+    }
+
+    env
+}
+
+fn unwrap_return_value(obj: Rc<Object>) -> Rc<Object> {
+    if let Object::Return(ret) = &*obj {
+        return Rc::clone(&ret.value);
+    }
+    obj
 }

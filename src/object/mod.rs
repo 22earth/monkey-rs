@@ -23,12 +23,13 @@ pub enum Object {
 #[derive(Clone, Debug)]
 pub struct Environment {
     pub store: HashMap<String, Rc<Object>>,
-    // pub outer: Option<Rc<RefCell<Environment>>>,
+    pub outer: Option<Rc<RefCell<Environment>>>,
 }
 impl Environment {
     pub fn new() -> Self {
         Environment {
             store: HashMap::new(),
+            outer: None,
         }
     }
     pub fn set(&mut self, name: String, val: Rc<Object>) {
@@ -37,7 +38,17 @@ impl Environment {
     pub fn get(&self, name: &str) -> Option<Rc<Object>> {
         match self.store.get(name) {
             Some(obj) => Some(Rc::clone(obj)),
-            None => None,
+            // 值为空时向外层查找
+            None => match &self.outer {
+                Some(o) => o.borrow().get(name),
+                _ => None,
+            },
+        }
+    }
+    pub fn new_enclosed(env: Rc<RefCell<Environment>>) -> Environment {
+        Environment {
+            store: HashMap::new(),
+            outer: Some(Rc::clone(&env)),
         }
     }
 }
