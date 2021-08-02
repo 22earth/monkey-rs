@@ -3,7 +3,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     lexer::{punctuator::Punctuator, token::TokenKind},
-    object::{self, Environment, Function, Object},
+    object::{self, Builtin, Environment, Function, Object},
     parser::node::{BlockStatement, Expression, Node, Program, Statement},
 };
 
@@ -91,9 +91,12 @@ fn eval_expression(exp: &Expression, env: Rc<RefCell<Environment>>) -> EvalResul
 fn eval_identifier(ident: &str, env: Rc<RefCell<Environment>>) -> Result<Rc<Object>, EvalError> {
     match env.borrow().get(ident) {
         Some(obj) => Ok(obj),
-        None => Err(EvalError {
-            message: format!("identifier not found: {}", ident),
-        }),
+        None => match Builtin::lookup(ident) {
+            Some(obj) => Ok(Rc::new(obj)),
+            None => Err(EvalError {
+                message: format!("identifier not found: {}", ident),
+            }),
+        },
     }
 }
 
@@ -246,10 +249,10 @@ fn apply_function(func: &Object, args: &Vec<Rc<Object>>) -> EvalResult {
             let evaluated = eval_block_statement(&f.body, extended_env)?;
             Ok(unwrap_return_value(evaluated))
         }
-        // Object::Builtin(b) => match b.apply(args) {
-        //     Ok(obj) => Ok(obj),
-        //     Err(err) => Err(EvalError { message: err }),
-        // },
+        Object::Builtin(b) => match b.apply(args) {
+            Ok(obj) => Ok(obj),
+            Err(err) => Err(EvalError { message: err }),
+        },
         f => Err(EvalError {
             message: format!("{:?} is not a function", f),
         }),
