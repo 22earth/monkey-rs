@@ -3,7 +3,7 @@ use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     lexer::{punctuator::Punctuator, token::TokenKind},
-    object::{self, Environment, Object},
+    object::{self, Environment, Function, Object},
     parser::node::{BlockStatement, Expression, Node, Program, Statement},
 };
 
@@ -68,6 +68,14 @@ fn eval_expression(exp: &Expression, env: Rc<RefCell<Environment>>) -> EvalResul
             }
         }
         Expression::Identifier(ident) => eval_identifier(ident, env),
+        Expression::Function(f) => {
+            let func = Function {
+                parameters: f.parameters.clone(),
+                body: f.body.clone(),
+                env: Rc::clone(&env),
+            };
+            Ok(Rc::new(Object::Function(Rc::new(func))))
+        }
         _ => Err(EvalError {
             message: "unimplement eval expression".to_string(),
         }),

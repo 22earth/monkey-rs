@@ -218,3 +218,33 @@ fn test_error_handling() {
         }
     }
 }
+
+#[test]
+fn test_function_object() {
+    let tests = [(
+        "fn(x) { x + 2; };",
+        r#"fn(x) {
+(x + 2)
+}"#,
+    )];
+    for t in tests {
+        let evaluated = test_eval(t.0);
+        assert_eq!(evaluated.to_string(), t.1.to_string())
+    }
+}
+
+#[test]
+fn test_function_application() {
+    let tests = [
+        ("let identity = fn(x) { x; }; identity(5);", 5),
+        ("let identity = fn(x) { return x; }; identity(5);", 5),
+        ("let double = fn(x) { x * 2; }; double(5);", 10),
+        ("let add = fn(x, y) { x + y; }; add(5, 5);", 10),
+        ("let add = fn(x, y) { x + y; }; add(5 + 5, add(5, 5));", 20),
+        ("fn(x) { x; }(5)", 5),
+    ];
+
+    for t in tests {
+        test_integer_object(&test_eval(t.0), t.1)
+    }
+}

@@ -1,6 +1,9 @@
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::{fmt, rc::Rc};
+
+use crate::parser::node;
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
 pub enum Object {
@@ -8,7 +11,7 @@ pub enum Object {
     Bool(bool),
     String(String),
     Return(Rc<Return>),
-    // Function(Rc<Function>),
+    Function(Rc<Function>),
     // Builtin(Builtin),
     // Array(Rc<Array>),
     // Hash(Rc<MonkeyHash>),
@@ -56,6 +59,42 @@ impl Hash for Return {
         panic!("hash for return not supported");
     }
 }
+
+#[derive(Debug, Clone)]
+pub struct Function {
+    pub parameters: Vec<node::IdentifierExpression>,
+    pub body: node::BlockStatement,
+    pub env: Rc<RefCell<Environment>>,
+}
+
+impl Function {
+    fn inspect(&self) -> String {
+        let params: Vec<String> = (&self.parameters)
+            .into_iter()
+            .map(|p| p.to_string())
+            .collect();
+        format!(
+            "fn({}) {{\n{}\n}}",
+            params.join(", "),
+            self.body.to_string()
+        )
+    }
+}
+
+impl PartialEq for Function {
+    fn eq(&self, _other: &Function) -> bool {
+        // TODO: implement this, but it should never get used
+        panic!("partial eq not implemented for function");
+    }
+}
+impl Eq for Function {}
+impl Hash for Function {
+    fn hash<H: Hasher>(&self, _state: &mut H) {
+        // we should never hash an array so should be fine
+        panic!("hash for function not supported");
+    }
+}
+
 impl Object {
     pub fn inspect(&self) -> String {
         match self {
@@ -63,7 +102,7 @@ impl Object {
             Object::Bool(b) => b.to_string(),
             Object::String(s) => s.clone(),
             Object::Return(r) => r.value.inspect(),
-            // Object::Function(f) => f.inspect(),
+            Object::Function(f) => f.inspect(),
             // Object::Builtin(b) => b.inspect(),
             // Object::Array(a) => a.inspect(),
             // Object::Hash(h) => h.inspect(),
