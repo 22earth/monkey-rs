@@ -1,4 +1,4 @@
-# monkey-rs(WIP)
+# monkey-rs
 
 An interpreter for the Monkey programming language written in Rust, described in [Writing An Interpreter In Go](https://interpreterbook.com/#the-monkey-programming-language)
 

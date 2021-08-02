@@ -328,3 +328,23 @@ fn test_array_index_expressions() {
         assert_eq!(test_eval(t.0).to_string(), t.1);
     }
 }
+
+#[test]
+fn test_hash_index_expressions() {
+    let tests = [
+        (r#"{"foo": 4+1}["foo"]"#, 5),
+        (r#"{"foo": 6-1}["foo"]"#, 5),
+        (r#"let key = "foo"; {"foo": 5}[key]"#, 5),
+        (r#"{5: 5}[5*1]"#, 5),
+        (r#"{5: 5}[5/1]"#, 5),
+        (r#"{true: 5}[true]"#, 5),
+        (r#"{false: 5}[false]"#, 5),
+    ];
+    let null_tests = [(r#"{"foo": 5}["bar"]"#, "null"), (r#"{}["foo"]"#, "null")];
+    for t in tests {
+        test_integer_object(&test_eval(t.0), t.1)
+    }
+    for t in null_tests {
+        assert_eq!(test_eval(t.0).to_string(), t.1);
+    }
+}

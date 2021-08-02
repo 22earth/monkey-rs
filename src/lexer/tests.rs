@@ -42,6 +42,7 @@ if (5 < 10) {
 "foobar";
 "foo bar";
 [1, 2];
+{"foo": "bar"}
 "#;
     let mut lexer = Lexer::new(s);
     let expected = [
@@ -128,6 +129,11 @@ if (5 < 10) {
         TokenKind::numeric_literal(2),
         TokenKind::punctuator(Punctuator::CloseBracket),
         TokenKind::punctuator(Punctuator::Semicolon),
+        TokenKind::punctuator(Punctuator::OpenBlock),
+        TokenKind::string_literal("foo"),
+        TokenKind::punctuator(Punctuator::Colon),
+        TokenKind::string_literal("bar"),
+        TokenKind::punctuator(Punctuator::CloseBlock),
     ];
     expect_tokens(&mut lexer, &expected);
 }
