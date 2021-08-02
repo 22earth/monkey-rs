@@ -4,7 +4,6 @@ use super::BlockStatement;
 
 #[derive(Hash, Eq, PartialEq, Clone, Debug)]
 pub struct FunctionLiteral {
-    // TODO Expression::Identifier
     pub parameters: Vec<IdentifierExpression>,
     pub body: BlockStatement,
 }

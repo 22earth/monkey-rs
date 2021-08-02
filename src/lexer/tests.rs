@@ -20,7 +20,7 @@ fn check_string() {
 
 #[test]
 fn test_lexer() {
-    let s = r"let five = 5;
+    let s = r#"let five = 5;
 let ten = 10;
 
 let add = fn(x, y) {
@@ -39,8 +39,10 @@ if (5 < 10) {
 
 10 == 10;
 10 != 9;
-
-";
+"foobar";
+"foo bar";
+[1, 2];
+"#;
     let mut lexer = Lexer::new(s);
     let expected = [
         TokenKind::keyword(Keyword::Let),
@@ -115,6 +117,16 @@ if (5 < 10) {
         TokenKind::numeric_literal(10),
         TokenKind::punctuator(Punctuator::NotEq),
         TokenKind::numeric_literal(9),
+        TokenKind::punctuator(Punctuator::Semicolon),
+        TokenKind::string_literal("foobar"),
+        TokenKind::punctuator(Punctuator::Semicolon),
+        TokenKind::string_literal("foo bar"),
+        TokenKind::punctuator(Punctuator::Semicolon),
+        TokenKind::punctuator(Punctuator::OpenBracket),
+        TokenKind::numeric_literal(1),
+        TokenKind::punctuator(Punctuator::Comma),
+        TokenKind::numeric_literal(2),
+        TokenKind::punctuator(Punctuator::CloseBracket),
         TokenKind::punctuator(Punctuator::Semicolon),
     ];
     expect_tokens(&mut lexer, &expected);

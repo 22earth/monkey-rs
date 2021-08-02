@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use crate::lexer::{
     keyword::Keyword,
     punctuator::Punctuator,
@@ -100,7 +102,8 @@ impl<'a> Parser<'a> {
             TokenKind::Punctuator(Punctuator::OpenParen) => Some(Parser::parse_grouped_expression),
             TokenKind::Keyword(Keyword::If) => Some(Parser::parse_if_expression),
             TokenKind::Keyword(Keyword::Function) => Some(Parser::parse_function_literal),
-            // TODO array hash
+            TokenKind::Punctuator(Punctuator::OpenBracket) => Some(Parser::parse_array_literal),
+            TokenKind::Punctuator(Punctuator::OpenBlock) => Some(Parser::parse_hash_literal),
             _ => None,
         }
     }
@@ -288,7 +291,6 @@ impl<'a> Parser<'a> {
         exp
     }
     fn parse_if_expression(parser: &mut Parser<'_>) -> ParseResult<Expression> {
-        // TODO
         parser.expect_peek(&TokenKind::Punctuator(Punctuator::OpenParen))?;
         parser.next_token();
         let condition = parser.parse_expression(Precedence::Lowest)?;
@@ -410,5 +412,32 @@ impl<'a> Parser<'a> {
         self.expect_peek(&end)?;
 
         Ok(list)
+    }
+    fn parse_array_literal(parser: &mut Parser<'_>) -> ParseResult<Expression> {
+        let elements =
+            parser.parse_expression_list(TokenKind::Punctuator(Punctuator::CloseBracket))?;
+        Ok(Expression::Array(Box::new(node::ArrayLiteral { elements })))
+    }
+    fn parse_hash_literal(parser: &mut Parser<'_>) -> ParseResult<Expression> {
+        let mut pairs: HashMap<Expression, Expression> = HashMap::new();
+
+        while !parser.peek_token_is(&TokenKind::Punctuator(Punctuator::CloseBlock)) {
+            parser.next_token();
+            let key = parser.parse_expression(Precedence::Lowest)?;
+
+            parser.expect_peek(&TokenKind::Punctuator(Punctuator::Colon))?;
+            parser.next_token();
+            let value = parser.parse_expression(Precedence::Lowest)?;
+
+            pairs.insert(key, value);
+
+            if !parser.peek_token_is(&TokenKind::Punctuator(Punctuator::CloseBlock)) {
+                parser.expect_peek(&TokenKind::Punctuator(Punctuator::Comma))?;
+            }
+        }
+
+        parser.expect_peek(&TokenKind::Punctuator(Punctuator::CloseBlock))?;
+
+        Ok(Expression::Hash(Box::new(node::HashLiteral { pairs })))
     }
 }

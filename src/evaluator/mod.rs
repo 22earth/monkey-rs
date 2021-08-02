@@ -82,6 +82,16 @@ fn eval_expression(exp: &Expression, env: Rc<RefCell<Environment>>) -> EvalResul
             let args = eval_expressions(&exp.arguments, env)?;
             apply_function(&function, &args)
         }
+        Expression::Array(a) => {
+            let elements = eval_expressions(&a.elements, Rc::clone(&env))?;
+            Ok(Rc::new(Object::Array(Rc::new(object::Array { elements }))))
+        }
+        // Expression::Index(i) => {
+        //     let left = eval_expression(&i.left, Rc::clone(&env))?;
+        //     let index = eval_expression(&i.index, env)?;
+        //     eval_index_expression(left, index)
+        // }
+        // Expression::Hash(h) => eval_hash_literal(&h, Rc::clone(&env)),
         _ => Err(EvalError {
             message: "unimplement eval expression".to_string(),
         }),

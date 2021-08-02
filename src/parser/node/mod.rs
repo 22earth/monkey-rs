@@ -2,15 +2,16 @@ use std::fmt;
 
 pub use self::{
     block_stmt::BlockStatement, call_expression::CallExpression,
-    expression_stmt::ExpressionStatement, function_literal::*, if_expression::IfExpression,
-    infix_expression::InfixExpression, let_stmt::LetStatement, prefix_expression::PrefixExpression,
-    return_stmt::ReturnStatement,
+    expression_stmt::ExpressionStatement, function_literal::*, hash_literal::HashLiteral,
+    if_expression::IfExpression, infix_expression::InfixExpression, let_stmt::LetStatement,
+    prefix_expression::PrefixExpression, return_stmt::ReturnStatement,
 };
 
 mod block_stmt;
 mod call_expression;
 mod expression_stmt;
 mod function_literal;
+mod hash_literal;
 mod if_expression;
 mod infix_expression;
 mod let_stmt;
@@ -87,6 +88,9 @@ pub enum Expression {
     If(Box<IfExpression>),
     Function(Box<FunctionLiteral>),
     Call(Box<CallExpression>),
+    Array(Box<ArrayLiteral>),
+    Index(Box<IndexExpression>),
+    Hash(Box<HashLiteral>),
 }
 
 impl fmt::Display for Expression {
@@ -104,6 +108,9 @@ impl fmt::Display for Expression {
                 Expression::If(value) => format!("{}", value),
                 Expression::Function(value) => format!("{}", value),
                 Expression::Call(value) => format!("{}", value),
+                Expression::Array(a) => format!("{}", a),
+                Expression::Index(i) => format!("{}", i),
+                Expression::Hash(h) => format!("{}", h),
             }
         )
     }
@@ -120,5 +127,32 @@ impl From<i64> for Expression {
     #[inline]
     fn from(n: i64) -> Self {
         Self::Integer(n)
+    }
+}
+
+#[derive(Hash, Eq, PartialEq, Clone, Debug)]
+pub struct ArrayLiteral {
+    pub elements: Vec<Expression>,
+}
+
+impl fmt::Display for ArrayLiteral {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let elements: Vec<String> = (&self.elements)
+            .into_iter()
+            .map(|e| e.to_string())
+            .collect();
+        write!(f, "[{}]", elements.join(", "))
+    }
+}
+
+#[derive(Hash, Eq, PartialEq, Clone, Debug)]
+pub struct IndexExpression {
+    pub left: Expression,
+    pub index: Expression,
+}
+
+impl fmt::Display for IndexExpression {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "({}[{}])", self.left.to_string(), self.index.to_string())
     }
 }
