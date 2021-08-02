@@ -1,9 +1,10 @@
-use std::io;
+use std::{cell::RefCell, io, rc::Rc};
 
-use crate::{evaluator, parser};
+use crate::{evaluator, object::Environment, parser};
 
 pub fn start<R: io::BufRead, W: io::Write>(mut reader: R, mut writer: W) -> io::Result<()> {
     #![allow(warnings)]
+    let env = Rc::new(RefCell::new(Environment::new()));
     loop {
         writer.write(b"> ");
         writer.flush();
@@ -16,7 +17,7 @@ pub fn start<R: io::BufRead, W: io::Write>(mut reader: R, mut writer: W) -> io::
         }
         match parser::parse(&line) {
             Ok(node) => {
-                let evaluated = evaluator::eval(&node);
+                let evaluated = evaluator::eval(&node, Rc::clone(&env));
                 match evaluated {
                     Ok(obj) => {
                         write!(writer, "{}\n", obj);

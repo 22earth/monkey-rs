@@ -1,9 +1,9 @@
 use core::fmt;
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
 use crate::{
     lexer::{punctuator::Punctuator, token::TokenKind},
-    object::{self, Object},
+    object::{self, Environment, Object},
     parser::node::{BlockStatement, Expression, Node, Program, Statement},
 };
 
@@ -23,18 +23,18 @@ impl fmt::Display for EvalError {
     }
 }
 
-pub fn eval(node: &Node) -> EvalResult {
+pub fn eval(node: &Node, env: Rc<RefCell<Environment>>) -> EvalResult {
     match node {
-        Node::Program(ref p) => eval_program(p),
-        Node::Expression(ref exp) => eval_expression(exp),
-        Node::Statement(ref stmt) => eval_statement(stmt),
+        Node::Program(ref p) => eval_program(p, env),
+        Node::Expression(ref exp) => eval_expression(exp, env),
+        Node::Statement(ref stmt) => eval_statement(stmt, env),
     }
 }
 
-fn eval_program(p: &Program) -> EvalResult {
+fn eval_program(p: &Program, env: Rc<RefCell<Environment>>) -> EvalResult {
     let mut result = Rc::new(Object::Null);
     for stmt in &p.body {
-        let res = eval_statement(stmt)?;
+        let res = eval_statement(stmt, Rc::clone(&env))?;
         // 处理 return
         match &*res {
             Object::Return(r) => return Ok(Rc::clone(&r.value)),
@@ -44,40 +44,53 @@ fn eval_program(p: &Program) -> EvalResult {
     Ok(result)
 }
 
-fn eval_expression(exp: &Expression) -> EvalResult {
+fn eval_expression(exp: &Expression, env: Rc<RefCell<Environment>>) -> EvalResult {
     match exp {
         Expression::Integer(num) => Ok(Rc::new(Object::Int(*num))),
         Expression::Boolean(b) => Ok(Rc::new(Object::Bool(*b))),
         Expression::Prefix(exp) => {
-            let right = eval_expression(&exp.right)?;
+            let right = eval_expression(&exp.right, env)?;
             eval_prefix_expression(&exp.operator, right)
         }
         Expression::Infix(exp) => {
-            let left = eval_expression(&exp.left)?;
-            let right = eval_expression(&exp.right)?;
+            let left = eval_expression(&exp.left, Rc::clone(&env))?;
+            let right = eval_expression(&exp.right, env)?;
             eval_infix_expression(&exp.operator, left, right)
         }
         Expression::If(if_exp) => {
-            let evaluated = eval_expression(&if_exp.condition)?;
+            let evaluated = eval_expression(&if_exp.condition, Rc::clone(&env))?;
             match is_truthy(&evaluated) {
-                true => eval_block_statement(&if_exp.consequence),
+                true => eval_block_statement(&if_exp.consequence, env),
                 false => match &if_exp.alternative {
-                    Some(alt) => eval_block_statement(alt),
+                    Some(alt) => eval_block_statement(alt, env),
                     None => Ok(Rc::new(Object::Null)),
                 },
             }
         }
+        Expression::Identifier(ident) => eval_identifier(ident, env),
         _ => Err(EvalError {
             message: "unimplement eval expression".to_string(),
         }),
     }
 }
 
-fn eval_block_statement(consequence: &BlockStatement) -> Result<Rc<Object>, EvalError> {
+fn eval_identifier(ident: &str, env: Rc<RefCell<Environment>>) -> Result<Rc<Object>, EvalError> {
+    match env.borrow().get(ident) {
+        Some(obj) => Ok(obj),
+        None => Err(EvalError {
+            message: format!("identifier not found: {}", ident),
+        }),
+    }
+}
+
+fn eval_block_statement(
+    consequence: &BlockStatement,
+    env: Rc<RefCell<Environment>>,
+) -> Result<Rc<Object>, EvalError> {
     let mut result = Rc::new(Object::Null);
 
     for stmt in &consequence.statements {
-        let res = eval_statement(stmt)?;
+        let res = eval_statement(stmt, Rc::clone(&env))?;
         match *res {
             Object::Return(_) => return Ok(res),
             _ => result = res,
@@ -118,7 +131,7 @@ fn eval_bool_infix_expression(
         TokenKind::Punctuator(Punctuator::NotEq) => Ok(Rc::new(Object::Bool(l != r))),
         _ => {
             return Err(EvalError {
-                message: format!("unknown operator {}", operator),
+                message: format!("unknown operator: {} {} {}", l, operator, r),
             })
         }
     }
@@ -140,7 +153,7 @@ fn eval_integer_infix_expression(
         TokenKind::Punctuator(Punctuator::NotEq) => Ok(Rc::new(Object::Bool(l != r))),
         _ => {
             return Err(EvalError {
-                message: format!("unknown operator {}", operator),
+                message: format!("unknown operator: {} {} {}", l, operator, r),
             })
         }
     }
@@ -179,17 +192,18 @@ fn eval_bang_operator_expression(right: Rc<Object>) -> Result<Rc<Object>, EvalEr
     }))
 }
 
-fn eval_statement(stmt: &Statement) -> EvalResult {
+fn eval_statement(stmt: &Statement, env: Rc<RefCell<Environment>>) -> EvalResult {
     match stmt {
         Statement::Let(stmt) => {
-            // TODO
-            eval_expression(&stmt.value);
-            todo!()
+            let exp = eval_expression(&stmt.value, Rc::clone(&env))?;
+            let obj = Rc::clone(&exp);
+            env.borrow_mut().set(stmt.name.clone(), obj);
+            Ok(exp)
         }
         Statement::Return(ret) => {
-            let value = eval_expression(&ret.value)?;
+            let value = eval_expression(&ret.value, env)?;
             Ok(Rc::new(Object::Return(Rc::new(object::Return { value }))))
         }
-        Statement::Expression(exp) => eval_expression(&exp.expression),
+        Statement::Expression(exp) => eval_expression(&exp.expression, env),
     }
 }

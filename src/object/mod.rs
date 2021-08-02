@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::{fmt, rc::Rc};
 
@@ -14,6 +15,28 @@ pub enum Object {
     Null,
     // CompiledFunction(Rc<CompiledFunction>),
     // Closure(Rc<Closure>),
+}
+
+#[derive(Clone, Debug)]
+pub struct Environment {
+    pub store: HashMap<String, Rc<Object>>,
+    // pub outer: Option<Rc<RefCell<Environment>>>,
+}
+impl Environment {
+    pub fn new() -> Self {
+        Environment {
+            store: HashMap::new(),
+        }
+    }
+    pub fn set(&mut self, name: String, val: Rc<Object>) {
+        self.store.insert(name, val);
+    }
+    pub fn get(&self, name: &str) -> Option<Rc<Object>> {
+        match self.store.get(name) {
+            Some(obj) => Some(Rc::clone(obj)),
+            None => None,
+        }
+    }
 }
 
 #[derive(Clone, Debug)]

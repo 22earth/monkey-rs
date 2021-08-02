@@ -1,11 +1,15 @@
 use std::{cell::RefCell, rc::Rc};
 
 use super::*;
-use crate::{object::Object, parser};
+use crate::{
+    object::{Environment, Object},
+    parser,
+};
 
 fn test_eval(input: &str) -> Rc<Object> {
+    let env = Rc::new(RefCell::new(Environment::new()));
     match parser::parse(input) {
-        Ok(node) => eval(&node).expect(input),
+        Ok(node) => eval(&node, env).expect(input),
         Err(e) => panic!("error {:?} on input {}", e, input),
     }
 }
@@ -158,5 +162,59 @@ return 1;
     for t in tests {
         let evaluated = test_eval(t.0);
         test_integer_object(&evaluated, t.1)
+    }
+}
+
+#[test]
+fn test_let_statement() {
+    let tests = [
+        ("let a = 5; a;", 5),
+        ("let a = 5 * 5; a;", 25),
+        ("let a = 5; let b = a; b;", 5),
+        ("let a = 5; let b = a; let c = a + b + 5; c;", 15),
+    ];
+    for t in tests {
+        let evaluated = test_eval(t.0);
+        test_integer_object(&evaluated, t.1)
+    }
+}
+
+#[test]
+fn test_error_handling() {
+    let tests = [
+        ("5 + true;", "type mismatch: Int(5) + Bool(true)"),
+        ("5 + true; 5;", "type mismatch: Int(5) + Bool(true)"),
+        ("-true", "unknown operator: -Bool(true)"),
+        ("true + false", "unknown operator: true + false"),
+        ("5; true + false; 5", "unknown operator: true + false"),
+        (
+            "if (10 > 1) { true + false; }",
+            "unknown operator: true + false",
+        ),
+        (
+            "if (10 > 1) {
+                             if (10 > 1) {
+                                return true + false;
+                             }
+
+                             return 1;
+                          }",
+            "unknown operator: true + false",
+        ),
+        ("foobar", "identifier not found: foobar"),
+        // (
+        //     r#" {"name": "Monkey"}[fn(x) { x }]; "#,
+        //     "unusable as hash key: fn(x) {\nx\n}",
+        // ),
+    ];
+    for t in tests {
+        let env = Rc::new(RefCell::new(Environment::new()));
+        match parser::parse(t.0) {
+            Ok(node) => match eval(&node, env) {
+                Err(e) => assert_eq!(e.message, t.1),
+                n => panic!("expected error {} but got {:?}", t.1, n),
+            },
+            Err(e) => panic!("error {:?} on input {}", e, t.0),
+        }
     }
 }
