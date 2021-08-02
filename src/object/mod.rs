@@ -14,7 +14,7 @@ pub enum Object {
     Function(Rc<Function>),
     Builtin(Builtin),
     Array(Rc<Array>),
-    // Hash(Rc<MonkeyHash>),
+    Hash(Rc<MonkeyHash>),
     Null,
     // CompiledFunction(Rc<CompiledFunction>),
     // Closure(Rc<Closure>),
@@ -267,6 +267,26 @@ impl Hash for Array {
     }
 }
 
+#[derive(Eq, PartialEq, Clone, Debug)]
+pub struct MonkeyHash {
+    pub pairs: HashMap<Rc<Object>, Rc<Object>>,
+}
+impl MonkeyHash {
+    fn inspect(&self) -> String {
+        let pairs: Vec<String> = (&self.pairs)
+            .into_iter()
+            .map(|(key, value)| format!("{}: {}", key.inspect(), value.inspect()))
+            .collect();
+        format!("{{{}}}", pairs.join(", "))
+    }
+}
+impl Hash for MonkeyHash {
+    fn hash<H: Hasher>(&self, _state: &mut H) {
+        // should never happen
+        panic!("hash not implmented for monkey hash");
+    }
+}
+
 impl Object {
     pub fn inspect(&self) -> String {
         match self {
@@ -277,7 +297,7 @@ impl Object {
             Object::Function(f) => f.inspect(),
             Object::Builtin(b) => b.inspect(),
             Object::Array(a) => a.inspect(),
-            // Object::Hash(h) => h.inspect(),
+            Object::Hash(h) => h.inspect(),
             Object::Null => String::from("null"),
             // Object::CompiledFunction(f) => f.inspect(),
             // Object::Closure(c) => c.inspect(),

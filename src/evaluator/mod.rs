@@ -1,10 +1,10 @@
 use core::fmt;
-use std::{cell::RefCell, rc::Rc};
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use crate::{
     lexer::{punctuator::Punctuator, token::TokenKind},
-    object::{self, Builtin, Environment, Function, Object},
-    parser::node::{BlockStatement, Expression, Node, Program, Statement},
+    object::{self, Builtin, Environment, Function, MonkeyHash, Object},
+    parser::node::{BlockStatement, Expression, HashLiteral, Node, Program, Statement},
 };
 
 #[cfg(test)]
@@ -86,12 +86,12 @@ fn eval_expression(exp: &Expression, env: Rc<RefCell<Environment>>) -> EvalResul
             let elements = eval_expressions(&a.elements, Rc::clone(&env))?;
             Ok(Rc::new(Object::Array(Rc::new(object::Array { elements }))))
         }
-        // Expression::Index(i) => {
-        //     let left = eval_expression(&i.left, Rc::clone(&env))?;
-        //     let index = eval_expression(&i.index, env)?;
-        //     eval_index_expression(left, index)
-        // }
-        // Expression::Hash(h) => eval_hash_literal(&h, Rc::clone(&env)),
+        Expression::Index(i) => {
+            let left = eval_expression(&i.left, Rc::clone(&env))?;
+            let index = eval_expression(&i.index, env)?;
+            eval_index_expression(left, index)
+        }
+        Expression::Hash(h) => eval_hash_literal(&h, Rc::clone(&env)),
         _ => Err(EvalError {
             message: "unimplement eval expression".to_string(),
         }),
@@ -299,4 +299,37 @@ fn eval_string_infix_expression(operator: &TokenKind, left: String, right: &str)
             message: format!("unknown operator: {} {} {}", left, operator, right),
         }),
     }
+}
+
+fn eval_index_expression(left: Rc<Object>, index: Rc<Object>) -> EvalResult {
+    match (&*left, &*index) {
+        (Object::Array(a), Object::Int(i)) => match a.elements.get(*i as usize) {
+            Some(el) => Ok(Rc::clone(el)),
+            None => Ok(Rc::new(Object::Null)),
+        },
+        (Object::Hash(h), _object) => match &*index {
+            Object::String(_) | Object::Int(_) | Object::Bool(_) => match h.pairs.get(&*index) {
+                Some(obj) => Ok(Rc::clone(obj)),
+                None => Ok(Rc::new(Object::Null)),
+            },
+            _ => Err(EvalError {
+                message: format!("unusable as hash key: {}", index),
+            }),
+        },
+        _ => Err(EvalError {
+            message: format!("index operator not supported {}", index),
+        }),
+    }
+}
+
+fn eval_hash_literal(h: &HashLiteral, env: Rc<RefCell<Environment>>) -> EvalResult {
+    let mut pairs = HashMap::new();
+
+    for (key_exp, val_exp) in &h.pairs {
+        let key = eval_expression(key_exp, Rc::clone(&env))?;
+        let value = eval_expression(val_exp, Rc::clone(&env))?;
+        pairs.insert(key, value);
+    }
+
+    Ok(Rc::new(Object::Hash(Rc::new(MonkeyHash { pairs }))))
 }

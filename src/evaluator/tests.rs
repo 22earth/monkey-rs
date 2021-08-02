@@ -290,3 +290,41 @@ fn test_builtin_functions() {
         }
     }
 }
+
+#[test]
+fn test_array_literals() {
+    let input = "[1, 2 * 2, 3 + 3]";
+    let obj = test_eval(input);
+    match &*obj {
+        Object::Array(a) => {
+            test_integer_object(a.elements.get(0).unwrap(), 1);
+            test_integer_object(a.elements.get(1).unwrap(), 4);
+            test_integer_object(a.elements.get(2).unwrap(), 6);
+        }
+        _ => panic!("expected array but got {:?}", obj),
+    }
+}
+
+#[test]
+fn test_array_index_expressions() {
+    let tests = [
+        ("[1, 2, 3][0]", 1),
+        ("[1, 2, 3][1]", 2),
+        ("[1, 2, 3][2]", 3),
+        ("let i = 0; [1][i];", 1),
+        ("[1, 2, 3][1 + 1];", 3),
+        ("let myArray = [1, 2, 3]; myArray[2];", 3),
+        (
+            "let myArray = [1, 2, 3]; myArray[0] + myArray[1] + myArray[2];",
+            6,
+        ),
+        ("let myArray = [1, 2, 3]; let i = myArray[0]; myArray[i]", 2),
+    ];
+    let null_tests = [("[1, 2, 3][3]", "null"), ("[1, 2, 3][-1]", "null")];
+    for t in tests {
+        test_integer_object(&test_eval(t.0), t.1)
+    }
+    for t in null_tests {
+        assert_eq!(test_eval(t.0).to_string(), t.1);
+    }
+}

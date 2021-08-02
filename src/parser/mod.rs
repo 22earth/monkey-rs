@@ -85,10 +85,27 @@ impl<'a> Parser<'a> {
                 | Punctuator::NotEq
                 | Punctuator::LessThan => Some(Parser::parse_infix_expression),
                 Punctuator::OpenParen => Some(Parser::parse_call_expression),
+                Punctuator::OpenBracket => Some(Parser::parse_index_expression),
                 _ => None,
             },
             _ => None,
         }
+    }
+
+    fn parse_index_expression(
+        parser: &mut Parser<'_>,
+        left: Expression,
+    ) -> ParseResult<Expression> {
+        parser.next_token();
+
+        let exp = node::IndexExpression {
+            left,
+            index: parser.parse_expression(Precedence::Lowest)?,
+        };
+
+        parser.expect_peek(&TokenKind::Punctuator(Punctuator::CloseBracket))?;
+
+        Ok(Expression::Index(Box::new(exp)))
     }
     fn prefix_fn(&mut self) -> Option<PrefixFn> {
         match self.cur_token.kind() {
