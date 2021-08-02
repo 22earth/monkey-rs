@@ -129,6 +129,9 @@ fn eval_infix_expression(
     match (&*left, &*right) {
         (Object::Int(l), Object::Int(r)) => eval_integer_infix_expression(operator, *l, *r),
         (Object::Bool(l), Object::Bool(r)) => eval_bool_infix_expression(operator, *l, *r),
+        (Object::String(l), Object::String(r)) => {
+            eval_string_infix_expression(operator, l.clone(), &*r)
+        }
         _ => Err(EvalError {
             message: format!("type mismatch: {:?} {} {:?}", left, operator, right),
         }),
@@ -274,4 +277,13 @@ fn unwrap_return_value(obj: Rc<Object>) -> Rc<Object> {
         return Rc::clone(&ret.value);
     }
     obj
+}
+
+fn eval_string_infix_expression(operator: &TokenKind, left: String, right: &str) -> EvalResult {
+    match operator {
+        TokenKind::Punctuator(Punctuator::Add) => Ok(Rc::new(Object::String(left + right))),
+        _ => Err(EvalError {
+            message: format!("unknown operator: {} {} {}", left, operator, right),
+        }),
+    }
 }

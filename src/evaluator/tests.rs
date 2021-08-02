@@ -202,6 +202,7 @@ fn test_error_handling() {
             "unknown operator: true + false",
         ),
         ("foobar", "identifier not found: foobar"),
+        (r#""Hello" - "World""#, "unknown operator: Hello - World"),
         // (
         //     r#" {"name": "Monkey"}[fn(x) { x }]; "#,
         //     "unusable as hash key: fn(x) {\nx\n}",
@@ -251,7 +252,17 @@ fn test_function_application() {
 
 #[test]
 fn test_string_literal() {
-    let input = r#""Hello World!"#;
+    let input = r#""Hello World!""#;
+
+    match &*test_eval(input) {
+        Object::String(s) => assert_eq!(s, "Hello World!"),
+        obj => panic!(format!("expected string but got {:?}", obj)),
+    }
+}
+
+#[test]
+fn test_string_concatenation() {
+    let input = r#""Hello" + " " + "World!""#;
 
     match &*test_eval(input) {
         Object::String(s) => assert_eq!(s, "Hello World!"),
