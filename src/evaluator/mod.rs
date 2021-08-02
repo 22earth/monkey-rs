@@ -48,6 +48,7 @@ fn eval_expression(exp: &Expression, env: Rc<RefCell<Environment>>) -> EvalResul
     match exp {
         Expression::Integer(num) => Ok(Rc::new(Object::Int(*num))),
         Expression::Boolean(b) => Ok(Rc::new(Object::Bool(*b))),
+        Expression::String(s) => Ok(Rc::new(Object::String(s.clone()))),
         Expression::Prefix(exp) => {
             let right = eval_expression(&exp.right, env)?;
             eval_prefix_expression(&exp.operator, right)

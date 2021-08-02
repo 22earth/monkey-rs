@@ -248,3 +248,13 @@ fn test_function_application() {
         test_integer_object(&test_eval(t.0), t.1)
     }
 }
+
+#[test]
+fn test_string_literal() {
+    let input = r#""Hello World!"#;
+
+    match &*test_eval(input) {
+        Object::String(s) => assert_eq!(s, "Hello World!"),
+        obj => panic!(format!("expected string but got {:?}", obj)),
+    }
+}
